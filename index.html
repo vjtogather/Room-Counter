@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATmega32 Room Counter </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .hardware-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .component {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+        }
+        .component h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sensor-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        .entry-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        .entry-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+        .exit-btn {
+            background: #f44336;
+            color: white;
+        }
+        .exit-btn:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+        }
+        .tft-display {
+            background: linear-gradient(145deg, #1a1a2e, #0f3460);
+            padding: 30px;
+            border-radius: 15px;
+            border: 5px solid #333;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+            text-align: center;
+            grid-column: 1 / -1;
+        }
+        .tft-content {
+            background: #16213e;
+            padding: 25px;
+            border-radius: 10px;
+            border: 2px solid #0f3460;
+        }
+        .tft-title {
+            color: #00d9ff;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .counter-display {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .counter-box {
+            flex: 1;
+            padding: 20px;
+            margin: 0 10px;
+            background: rgba(0, 217, 255, 0.1);
+            border: 2px solid #00d9ff;
+            border-radius: 10px;
+        }
+        .counter-label {
+            color: #00d9ff;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .counter-value {
+            color: #fff;
+            font-size: 48px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        .status-message {
+            color: #4CAF50;
+            font-size: 20px;
+            margin-top: 20px;
+            min-height: 30px;
+            font-weight: bold;
+        }
+        .speaker-section {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #ffc107;
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+        .speaker-section h3 {
+            color: #ff6f00;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .audio-status {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #ffc107;
+            text-align: center;
+            font-size: 18px;
+            color: #ff6f00;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .controls {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .reset-btn {
+            background: #ff9800;
+            color: white;
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .reset-btn:hover {
+            background: #f57c00;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
+        }
+        .sensor-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+            margin-right: 5px;
+            transition: all 0.3s;
+        }
+        .sensor-indicator.active {
+            background: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulsing {
+            animation: pulse 0.5s ease-in-out;
+        }
+        .specs {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #2e7d32;
+            border: 1px solid #4CAF50;
+        }
+        .specs strong {
+            color: #1b5e20;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠  Entry/Exit Counter System</h1>
+        
+        <div class="hardware-section">
+            <div class="component">
+                <h3>
+                    <span class="sensor-indicator" id="sensor1"></span>
+                     Sensor 1 (Entry)
+                </h3>
+                <button class="sensor-btn entry-btn" onclick="detectEntry()">
+                    👋  Person Entry
+                </button>
+                <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                </div>
+            </div>
+
+            <div class="component">
+                <h3>
+                    <span class="sensor-indicator" id="sensor2"></span>
+                     Sensor 2 (Exit)
+                </h3>
+                <button class="sensor-btn exit-btn" onclick="detectExit()">
+                    🚪  Person Exit
+                </button>
+                <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                </div>
+            </div>
+
+            <div class="component tft-display">
+                <div class="tft-content">
+                    <div class="tft-title">📺  Display </div>
+                    <div class="counter-display">
+                        <div class="counter-box">
+                            <div class="counter-label">Total Entries</div>
+                            <div class="counter-value" id="entryCount">0</div>
+                        </div>
+                        <div class="counter-box">
+                            <div class="counter-label">Current Inside</div>
+                            <div class="counter-value" id="currentCount">0</div>
+                        </div>
+                        <div class="counter-box">
+                            <div class="counter-label">Total Exits</div>
+                            <div class="counter-value" id="exitCount">0</div>
+                        </div>
+                    </div>
+                    <div class="status-message" id="statusMsg">System Ready</div>
+                </div>
+            </div>
+
+            <div class="speaker-section">
+                <h3>
+                    🔊Speaker
+                </h3>
+                <div class="audio-status" id="audioStatus">
+                    🎵 Audio System Ready
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="reset-btn" onclick="resetSystem()">
+                🔄 Reset System
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let entryCount = 0;
+        let exitCount = 0;
+        let currentPeople = 0;
+        let isProcessing = false;
+
+        function detectEntry() {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            // Activate sensor indicator
+            const sensor1 = document.getElementById('sensor1');
+            sensor1.classList.add('active');
+
+            // Update counts
+            entryCount++;
+            currentPeople++;
+            
+            // Update display with animation
+            updateDisplay();
+
+            // Show status message
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.textContent = '✅ Person Entered';
+            statusMsg.style.color = '#4CAF50';
+
+            // Play audio message
+            playAudio('🎵 Playing: "WELCOME" - DFMini MP3');
+
+            // Reset sensor indicator
+            setTimeout(() => {
+                sensor1.classList.remove('active');
+                statusMsg.textContent = 'System Ready';
+                statusMsg.style.color = '#00d9ff';
+                isProcessing = false;
+            }, 2000);
+        }
+
+        function detectExit() {
+            if (isProcessing) return;
+            if (currentPeople <= 0) {
+                alert('⚠️ No one inside the room!');
+                return;
+            }
+            isProcessing = true;
+
+            // Activate sensor indicator
+            const sensor2 = document.getElementById('sensor2');
+            sensor2.classList.add('active');
+
+            // Update counts
+            exitCount++;
+            currentPeople--;
+            
+            // Update display with animation
+            updateDisplay();
+
+            // Show status message
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.textContent = '👋 Person Exited';
+            statusMsg.style.color = '#f44336';
+
+            // Play audio message
+            playAudio('🎵 Playing: "THANK YOU" - DFMini MP3');
+
+            // Reset sensor indicator
+            setTimeout(() => {
+                sensor2.classList.remove('active');
+                statusMsg.textContent = 'System Ready';
+                statusMsg.style.color = '#00d9ff';
+                isProcessing = false;
+            }, 2000);
+        }
+
+        function updateDisplay() {
+            const entryElem = document.getElementById('entryCount');
+            const exitElem = document.getElementById('exitCount');
+            const currentElem = document.getElementById('currentCount');
+
+            // Add pulse animation
+            entryElem.classList.add('pulsing');
+            exitElem.classList.add('pulsing');
+            currentElem.classList.add('pulsing');
+
+            // Update values
+            entryElem.textContent = entryCount;
+            exitElem.textContent = exitCount;
+            currentElem.textContent = currentPeople;
+
+            // Remove animation
+            setTimeout(() => {
+                entryElem.classList.remove('pulsing');
+                exitElem.classList.remove('pulsing');
+                currentElem.classList.remove('pulsing');
+            }, 500);
+        }
+
+        function playAudio(message) {
+            const audioStatus = document.getElementById('audioStatus');
+            audioStatus.textContent = message;
+            audioStatus.style.background = '#fff9c4';
+            audioStatus.style.borderColor = '#ffc107';
+
+            setTimeout(() => {
+                audioStatus.textContent = '🎵 Audio System Ready';
+                audioStatus.style.background = 'white';
+            }, 2000);
+        }
+
+        function resetSystem() {
+            if (confirm('Are you sure you want to reset the system?')) {
+                entryCount = 0;
+                exitCount = 0;
+                currentPeople = 0;
+                updateDisplay();
+                
+                const statusMsg = document.getElementById('statusMsg');
+                statusMsg.textContent = 'System Reset Complete';
+                statusMsg.style.color = '#ff9800';
+
+                setTimeout(() => {
+                    statusMsg.textContent = 'System Ready';
+                    statusMsg.style.color = '#00d9ff';
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>
